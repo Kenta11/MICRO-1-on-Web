@@ -200,6 +200,10 @@ textarea#micro-source {
   grid-template-columns: 320px 1fr;
   gap: 12px;
 }
+/* Grid items default to min-width: auto which lets long pre / table
+   contents push the column wider than its track.  Override so the
+   320px / 1fr split is respected and inner panes scroll/wrap instead. */
+.cpu-state > * { min-width: 0; }
 .cpu-state-micro {
   grid-template-columns: 400px 1fr;
 }
@@ -297,7 +301,11 @@ textarea#micro-source {
 }
 #io-output {
   min-height: 50px;
+  /* Wrap on any character so a long LPT stream doesn't push the parent
+     column wider than its grid track. */
   white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: anywhere;
   color: var(--accent2);
 }
 
