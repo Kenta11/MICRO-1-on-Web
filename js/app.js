@@ -13,71 +13,105 @@
   const Mic = window.MICRO1Microsim;
 
   // ============================================================ Sample sets
+  // 注: 以下のサンプルは MICROONE (samples/microone.cm) が CM にロード
+  // されている前提で「Simulator タブで Macrostep / Run しても halt する」
+  // 範囲だけにしてあります。MICROONE は textbook の標準 MICRO-1 とは
+  // ALU 系命令のセマンティクスが少し異なり、`disp(ra)` 形式が
+  // 「メモリ参照」ではなく「R[ra] + disp の即値」になります。
   const MACRO_SAMPLES = [
     {
-      name: 'hello.asm — print a string to LPT',
+      name: 'load.asm — LC で R0 に定数を入れて HLT',
       body:
-`TITLE Hello
-; Print "Hello!" by walking a null-terminated string in MM with R1 as index.
-        LA   1, MSG          ; R1 = address of first byte
-LOOP:   LX   0, (1)          ; R0 = M[R1]; sets Z if zero terminator
-        BZ   DONE
-        WIO  LPT             ; write low byte of R0 to printer
-        LEA  1, 1(1)         ; R1 = R1 + 1
-        B    LOOP
-DONE:   HLT
-MSG:    DC   X"0048          ; 'H'
-        DC   X"0065          ; 'e'
-        DC   X"006C
-        DC   X"006C
-        DC   X"006F
-        DC   X"0021          ; '!'
-        DC   X"000A          ; newline
-        DC   0
-END
-`,
-    },
-    {
-      name: 'echo.asm — copy CR (input) to LPT (output)',
-      body:
-`TITLE Echo
-LOOP:   RIO  CR
-        BZ   DONE
-        WIO  LPT
-        B    LOOP
-DONE:   HLT
-END
-`,
-    },
-    {
-      name: 'sum.asm — sum 1..N via memory operand',
-      body:
-`TITLE Sum
-        LC   2, 0
-        L    0, ZERO
-        L    1, NVAL
-LOOP:   CMP  1, X"0B(2)
-        BZ   DONE
-        ST   1, TMP
-        ADD  0, X"0D(2)
-        SUB  1, X"0C(2)
-        B    LOOP
-DONE:   HLT
-NVAL:   DC   10
-ZERO:   DC   0
-ONE:    DC   1
-TMP:    DC   0
-END
-`,
-    },
-    {
-      name: 'subroutine.asm — BSR / RET',
-      body:
-`TITLE Sub
-        BSR  MYSUB
+`TITLE Load
+        LC   0, X"AB
         HLT
-MYSUB:  LC   0, X"AB
-        RET
+END
+`,
+    },
+    {
+      name: 'lea.asm — LEA で R[ra]+disp を R[rb] に',
+      body:
+`TITLE Lea
+; LEA rb, disp(ra) は R[rb] := R[ra] + sign_extend(disp).
+        LC   1, X"10           ; R1 = 0x10
+        LEA  0, X"05(1)        ; R0 = R1 + 5 = 0x15
+        LEA  2, X"7F(0)        ; R2 = R0 + 0x7F = 0x94
+        HLT
+END
+`,
+    },
+    {
+      name: 'wio.asm — LPT に "Hi" を直接書き出す',
+      body:
+`TITLE Wio
+; WIO LPT は R0 の下位 byte を LPT (printer) に書き出す。
+        LC   0, X"48           ; 'H'
+        WIO  LPT
+        LC   0, X"69           ; 'i'
+        WIO  LPT
+        HLT
+END
+`,
+    },
+    {
+      name: 'loop.asm — SUB+BNZ で 5 回ループしながら "*" を出力',
+      body:
+`TITLE Loop
+; カウンタを 1 ずつ減らして 0 になるまでループする定番パターン。
+; MICROONE では SUB rb, imm が R[rb] -= imm として動作し、
+; 結果が 0 のとき ZER フラグが立つので、その後 BNZ で分岐できる。
+        LC   3, X"05           ; loop counter
+        LC   0, X"2A           ; '*'
+LOOP:   WIO  LPT
+        SUB  3, X"01           ; R3 -= 1; ZER set if R3 reaches 0
+        BNZ  LOOP              ; loop back while R3 != 0
+        HLT
+END
+`,
+    },
+    {
+      name: 'echo5.asm — CR から 5 byte 読んで LPT に書く',
+      body:
+`TITLE Echo5
+; CR (Card Reader) と LPT (Line Printer) の I/O。
+; RIO CR は次の 1 byte を R0 に読み込む。ここでは固定 5 byte 分回す。
+        LC   3, X"05           ; 5 文字読む
+LOOP:   RIO  CR
+        WIO  LPT
+        SUB  3, X"01
+        BNZ  LOOP
+        HLT
+END
+`,
+    },
+    {
+      name: 'mem.asm — STX/LX でメモリラウンドトリップ',
+      body:
+`TITLE Mem
+; STX rb, disp(ra) は MM[R[ra]+disp] := R[rb].
+; LX rb, disp(ra) は逆 (MM 読み出し)。
+        LC   0, X"AB           ; 書き込むデータ
+        LC   1, X"40           ; アドレス
+        STX  0, (1)            ; MM[0x40] := R0 = 0xAB
+        LC   0, X"00           ; R0 を一旦クリア
+        LX   2, (1)            ; R2 := MM[0x40] = 0xAB
+        HLT
+END
+`,
+    },
+    {
+      name: 'group1.asm — rm1asm エンコーディング回帰テスト',
+      body:
+`TITLE InputForParserGROUP1
+    ADD  1, 37 (0)
+    SUB  2, X"B3DF (1)
+    AND  3, O"314232 (2)
+    OR   0, B"1010010110100101 (3)
+    XOR  1, 43
+    MULT 2, X"B2F2
+    DIV  3, O"172712
+    CMP  0, B"1011010011001101
+    EX   1, (0)
 END
 `,
     },
