@@ -85,6 +85,31 @@ END
 `,
     },
     {
+      name: 'hello.asm — null 終端文字列を LPT に書く',
+      body:
+`TITLE Hello
+; null 終端文字列を MM から 1 byte ずつ取り出して LPT に書く。
+; LX 命令はロードしたデータでフラグを更新しないので、
+; 「ロードした値が 0 か」を判定するには明示的に CMP を使う。
+        LC   2, X"00           ; R2 = 0 (ゼロ比較に使う基準レジスタ)
+        LC   1, X"20           ; R1 = 文字列の先頭アドレス
+LOOP:   LX   0, (1)            ; R0 := MM[R1]
+        CMP  0, X"00(2)        ; R0 と R2+0=0 を比較 (ZER をセット)
+        BZ   DONE              ; ゼロなら終端
+        WIO  LPT               ; R0 の下位 byte を出力
+        LEA  1, X"01(1)        ; R1 = R1 + 1
+        B    LOOP
+DONE:   HLT
+ORG 20
+        DC   X"48              ; 'H'
+        DC   X"69              ; 'i'
+        DC   X"21              ; '!'
+        DC   X"0A              ; '\\n'
+        DC   X"00              ; null 終端
+END
+`,
+    },
+    {
       name: 'mem.asm — STX/LX でメモリラウンドトリップ',
       body:
 `TITLE Mem
