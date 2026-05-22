@@ -85,7 +85,7 @@ END
 `,
     },
     {
-      name: 'hello.asm — null 終端文字列を LPT に書く',
+      name: 'hello.asm — "Hello, world!" を LPT に書く',
       body:
 `TITLE Hello
 ; null 終端文字列を MM から 1 byte ずつ取り出して LPT に書く。
@@ -100,9 +100,19 @@ LOOP:   LX   0, (1)            ; R0 := MM[R1]
         LEA  1, X"01(1)        ; R1 = R1 + 1
         B    LOOP
 DONE:   HLT
-ORG 20
+ORG 20                         ; 文字列を MM[0x20] から配置
         DC   X"48              ; 'H'
-        DC   X"69              ; 'i'
+        DC   X"65              ; 'e'
+        DC   X"6C              ; 'l'
+        DC   X"6C              ; 'l'
+        DC   X"6F              ; 'o'
+        DC   X"2C              ; ','
+        DC   X"20              ; ' '
+        DC   X"77              ; 'w'
+        DC   X"6F              ; 'o'
+        DC   X"72              ; 'r'
+        DC   X"6C              ; 'l'
+        DC   X"64              ; 'd'
         DC   X"21              ; '!'
         DC   X"0A              ; '\\n'
         DC   X"00              ; null 終端

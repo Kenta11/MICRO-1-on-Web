@@ -33,16 +33,6 @@
   <section class="pane sim-controls">
     <div class="pane-head">
       <h2>制御</h2>
-      <div class="controls">
-        <button id="btn-step" title="1 microstep">Microstep</button>
-        <button id="btn-macrostep" title="次の FETCH まで進める">Macrostep</button>
-        <label for="max-steps" title="Run / Macrostep の microsteps 上限。空欄なら無制限">Max steps:</label>
-        <input id="max-steps" type="text" size="8" maxlength="9" value="100"
-               placeholder="無制限">
-        <button id="btn-run">Run</button>
-        <button id="btn-stop" disabled>Stop</button>
-        <button id="btn-reset">Reset (全消去)</button>
-      </div>
     </div>
     <div class="controls" id="sim-load-controls">
       <span class="muted">Macro asm 結果:</span>
@@ -55,6 +45,16 @@
       <input id="micro-entry" type="text" size="5" maxlength="3" placeholder="auto">
       <button id="btn-micro-load" title="アセンブル結果を CM に展開し CMAR を設定" disabled>Load into CM</button>
       <button id="btn-load-microone" title="textbook MICROONE を CM に展開">Load MICROONE</button>
+    </div>
+    <div class="controls">
+      <button id="btn-step" title="1 microstep">Microstep</button>
+      <button id="btn-macrostep" title="次の FETCH まで進める">Macrostep</button>
+      <label for="max-steps" title="Run / Macrostep の microsteps 上限。空欄なら無制限">Max steps:</label>
+      <input id="max-steps" type="text" size="8" maxlength="9" value="100"
+             placeholder="無制限">
+      <button id="btn-run">Run</button>
+      <button id="btn-stop" disabled>Stop</button>
+      <button id="btn-reset">Reset (全消去)</button>
     </div>
     <div id="sim-banner" class="banner">起動中…</div>
   </section>
