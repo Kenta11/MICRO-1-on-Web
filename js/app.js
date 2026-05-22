@@ -241,6 +241,7 @@ END
       for (const w of r.words) if (w.addr < lo) lo = w.addr;
       $('macro-entry').placeholder = toHex(lo, 4);
     }
+    $('btn-macro-load').disabled = !(r.ok && r.words.length);
     return r;
   }
   function doMacroLoad() {
@@ -278,6 +279,7 @@ END
       for (const w of r.words) if (w.addr < lo) lo = w.addr;
       $('micro-entry').placeholder = toHex(lo, 3);
     }
+    $('btn-micro-load').disabled = !(r.ok && r.words.length);
     return r;
   }
   function doMicroLoad() {

@@ -54,6 +54,15 @@ header .tagline {
 .tag-micro { color: var(--warn); padding: 0 4px; }
 .tag-sim   { color: var(--accent); padding: 0 4px; }
 header code { font-family: var(--mono); color: var(--accent); }
+#sim-load-controls {
+  font-size: 12px;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid var(--hl);
+}
+#sim-load-controls .muted { color: var(--muted); margin-right: 2px; }
+#sim-load-controls .sep { width: 12px; }
+.hint { color: var(--muted); font-size: 12px; }
 .banner {
   background: var(--panel-2);
   border: 1px solid var(--hl);

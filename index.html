@@ -42,6 +42,17 @@
         <button id="btn-load-microone" title="textbook MICROONE を CM に展開">Load MICROONE</button>
       </div>
     </div>
+    <div class="controls" id="sim-load-controls">
+      <span class="muted">Macro asm 結果:</span>
+      <label for="macro-entry">Entry PC:</label>
+      <input id="macro-entry" type="text" size="6" maxlength="4" placeholder="auto">
+      <button id="btn-macro-load" title="アセンブル結果を MM に展開し PC を設定" disabled>Load into MM</button>
+      <span class="sep"></span>
+      <span class="muted">Micro asm 結果:</span>
+      <label for="micro-entry">Entry CMAR:</label>
+      <input id="micro-entry" type="text" size="5" maxlength="3" placeholder="auto">
+      <button id="btn-micro-load" title="アセンブル結果を CM に展開し CMAR を設定" disabled>Load into CM</button>
+    </div>
     <div id="sim-banner" class="banner">起動中…</div>
   </section>
 
@@ -177,9 +188,7 @@
         <label for="macro-sample-select">サンプル:</label>
         <select id="macro-sample-select"></select>
         <button id="btn-macro-assemble" title="アセンブル (Ctrl+Enter)">Assemble</button>
-        <label for="macro-entry">Entry PC:</label>
-        <input id="macro-entry" type="text" size="6" maxlength="4" placeholder="auto">
-        <button id="btn-macro-load" title="MM にロード + PC をエントリに設定">Load into MM</button>
+        <span class="hint">→ Simulator タブで Load into MM</span>
       </div>
     </div>
     <textarea id="macro-source" spellcheck="false" autocomplete="off"></textarea>
@@ -201,9 +210,7 @@
         <label for="micro-sample-select">サンプル:</label>
         <select id="micro-sample-select"></select>
         <button id="btn-micro-assemble" title="アセンブル (Ctrl+Enter)">Assemble</button>
-        <label for="micro-entry">Entry CMAR:</label>
-        <input id="micro-entry" type="text" size="5" maxlength="3" placeholder="auto">
-        <button id="btn-micro-load" title="CM にロード + CMAR をエントリに設定">Load into CM</button>
+        <span class="hint">→ Simulator タブで Load into CM</span>
       </div>
     </div>
     <textarea id="micro-source" spellcheck="false" autocomplete="off"></textarea>
