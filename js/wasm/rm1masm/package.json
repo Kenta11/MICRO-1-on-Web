@@ -1,0 +1,17 @@
+{
+  "name": "rm1masm_wasm",
+  "type": "module",
+  "description": "WebAssembly wrapper for the rm1masm MICRO-1 microassembler",
+  "version": "0.1.0",
+  "license": "MIT",
+  "files": [
+    "rm1masm_wasm_bg.wasm",
+    "rm1masm_wasm.js",
+    "rm1masm_wasm.d.ts"
+  ],
+  "main": "rm1masm_wasm.js",
+  "types": "rm1masm_wasm.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

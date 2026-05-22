@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MICRO-1 on Web</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+  <h1>MICRO-1 on Web</h1>
+  <div class="mode-tabs">
+    <button class="tab-button active" data-mode="sim">Simulator</button>
+    <button class="tab-button" data-mode="macro">Macro asm (rm1asm)</button>
+    <button class="tab-button" data-mode="micro">Micro asm (rm1masm)</button>
+  </div>
+  <p class="tagline">
+    <span class="tag-macro">Macro asm</span>
+    で書いたものは MM に、
+    <span class="tag-micro">Micro asm</span>
+    で書いたものは CM に展開し、
+    <span class="tag-sim">Simulator</span>
+    タブで <code>m1sim.c</code> (WASM) が microstep ずつ実行します。
+  </p>
+</header>
+
+<!-- ============================================================ SIMULATOR -->
+<main id="sim-view" class="view active">
+  <section class="pane sim-controls">
+    <div class="pane-head">
+      <h2>制御</h2>
+      <div class="controls">
+        <button id="btn-step" title="1 microstep">Microstep</button>
+        <button id="btn-macrostep" title="次の FETCH まで進める">Macrostep</button>
+        <button id="btn-run">Run</button>
+        <button id="btn-stop" disabled>Stop</button>
+        <button id="btn-reset">Reset (全消去)</button>
+        <button id="btn-load-microone" title="textbook MICROONE を CM に展開">Load MICROONE</button>
+      </div>
+    </div>
+    <div id="sim-banner" class="banner">起動中…</div>
+  </section>
+
+  <section class="pane sim-cpu">
+    <div class="pane-head"><h2>CPU 状態</h2></div>
+    <div class="cpu-state cpu-state-micro">
+      <div class="regs">
+        <h3>レジスタ (R0..R7)</h3>
+        <table id="reg-table">
+          <tbody>
+            <tr><th>R0</th><td id="reg-r0" class="editable" data-edit="reg" data-idx="0" data-width="4">0000</td>
+                <th>R1</th><td id="reg-r1" class="editable" data-edit="reg" data-idx="1" data-width="4">0000</td>
+                <th>R2</th><td id="reg-r2" class="editable" data-edit="reg" data-idx="2" data-width="4">0000</td>
+                <th>R3</th><td id="reg-r3" class="editable" data-edit="reg" data-idx="3" data-width="4">0000</td></tr>
+            <tr><th>R4</th><td id="reg-r4" class="editable" data-edit="reg" data-idx="4" data-width="4">0000</td>
+                <th>R5</th><td id="reg-r5" class="editable" data-edit="reg" data-idx="5" data-width="4">0000</td>
+                <th>R6</th><td id="reg-r6" class="editable" data-edit="reg" data-idx="6" data-width="4">0000</td>
+                <th>R7</th><td id="reg-r7" class="editable" data-edit="reg" data-idx="7" data-width="4">0000</td></tr>
+          </tbody>
+        </table>
+
+        <h3>制御レジスタ</h3>
+        <table id="sys-table">
+          <tbody>
+            <tr><th>CMAR</th><td id="sys-cmar" class="editable" data-edit="cmar" data-width="3">000</td>
+                <th>PC</th>  <td id="sys-pc"   class="editable" data-edit="pc"   data-width="4">0000</td></tr>
+            <tr><th>IR</th>  <td id="sys-ir"   class="editable" data-edit="ir"   data-width="4">0000</td>
+                <th>MAR</th> <td id="sys-mar"  class="editable" data-edit="mar"  data-width="4">0000</td></tr>
+            <tr><th>C</th>   <td id="sys-c"    class="editable" data-edit="c"    data-width="2">00</td>
+                <th>FSR</th> <td id="sys-fsr"  class="editable" data-edit="fsr"  data-width="1">0</td></tr>
+          </tbody>
+        </table>
+
+        <h3>バス</h3>
+        <table id="bus-table">
+          <tbody>
+            <tr><th>LBUS</th><td id="bus-l">0000</td>
+                <th>RBUS</th><td id="bus-r">0000</td></tr>
+            <tr><th>ABUS</th><td id="bus-a">0000</td>
+                <th>SBUS</th><td id="bus-s">0000</td></tr>
+            <tr><th>IOBUS</th><td id="bus-io">00</td>
+                <th>CMDR</th><td id="sys-cmdr">0000000000</td></tr>
+          </tbody>
+        </table>
+
+        <h3>フラグ</h3>
+        <table id="flag-table">
+          <tbody>
+            <tr><th>ZER</th><td id="flag-zer" class="editable" data-edit="flag" data-which="zer" data-width="1">0</td>
+                <th>NEG</th><td id="flag-neg" class="editable" data-edit="flag" data-which="neg" data-width="1">0</td>
+                <th>CRY</th><td id="flag-cry" class="editable" data-edit="flag" data-which="cry" data-width="1">0</td>
+                <th>OV</th> <td id="flag-ov"  class="editable" data-edit="flag" data-which="ov"  data-width="1">0</td>
+                <th>CZ</th> <td id="flag-cz">1</td>
+                <th>T</th>  <td id="flag-t"   class="editable" data-edit="flag" data-which="t"   data-width="1">0</td></tr>
+          </tbody>
+        </table>
+
+        <h3>状態</h3>
+        <table id="status-table">
+          <tbody>
+            <tr><th>HALT</th><td id="status-halt">no</td></tr>
+            <tr><th>STEPS</th><td id="status-steps">0</td></tr>
+            <tr><th>NEXT (CMDR)</th><td id="status-next">FFFFFFFE00</td></tr>
+            <tr><th>FIELDS</th><td id="status-fields">-</td></tr>
+            <tr><th>NEXT MM[PC]</th><td id="status-mm-next">0000</td></tr>
+            <tr><th>DISASM</th><td id="status-mm-disasm">-</td></tr>
+          </tbody>
+        </table>
+
+        <h3>I/O</h3>
+        <div class="io-block">
+          <label>入力 (CR)</label>
+          <textarea id="io-input" rows="3" placeholder="RIO で 1 byte ずつ読み込まれます"></textarea>
+        </div>
+        <div class="io-block">
+          <label>出力 (LPT)</label>
+          <pre id="io-output"></pre>
+        </div>
+      </div>
+
+      <div class="memory">
+        <h3>CM (40-bit, 4K)</h3>
+        <div class="mem-controls">
+          <label for="cm-base">表示開始:</label>
+          <input id="cm-base" type="text" value="000" size="6" maxlength="3">
+          <button id="btn-cm-prev">&lt;&lt;</button>
+          <button id="btn-cm-next">&gt;&gt;</button>
+          <button id="btn-cm-follow">Follow CMAR</button>
+        </div>
+        <pre id="cm-view"></pre>
+        <div class="mem-edit">
+          <label>編集 CM:</label>
+          <input id="cm-edit-addr" type="text" size="5" maxlength="3" placeholder="000">
+          <span>:=</span>
+          <input id="cm-edit-value" type="text" size="13" maxlength="10" placeholder="40-bit hex">
+          <button id="btn-cm-edit">Set</button>
+          <button id="btn-cm-bp" title="このアドレスの CM ブレークポイントを切替">Toggle BP</button>
+        </div>
+
+        <h3>MM (16-bit, 64K)</h3>
+        <div class="mem-controls">
+          <label for="mm-base">表示開始:</label>
+          <input id="mm-base" type="text" value="0000" size="6" maxlength="4">
+          <button id="btn-mm-prev">&lt;&lt;</button>
+          <button id="btn-mm-next">&gt;&gt;</button>
+          <button id="btn-mm-follow">Follow PC</button>
+        </div>
+        <pre id="mm-view"></pre>
+        <div class="mem-edit">
+          <label>編集 MM:</label>
+          <input id="mm-edit-addr" type="text" size="6" maxlength="4" placeholder="0000">
+          <span>:=</span>
+          <input id="mm-edit-value" type="text" size="6" maxlength="4" placeholder="word">
+          <button id="btn-mm-edit">Set</button>
+          <button id="btn-mm-bp" title="このアドレスの MM ブレークポイントを切替">Toggle BP</button>
+        </div>
+        <div class="mem-edit" id="bp-status-row">
+          <label>BPs:</label>
+          <span id="bp-status">CM: 0 / MM: 0</span>
+          <button id="btn-bp-clear" title="全 BP を解除">Clear all</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ============================================================ MACRO ASM -->
+<main id="macro-view" class="view">
+  <section class="pane editor-pane">
+    <div class="pane-head">
+      <h2>Macro source (.asm → MM)</h2>
+      <div class="controls">
+        <label for="macro-sample-select">サンプル:</label>
+        <select id="macro-sample-select"></select>
+        <button id="btn-macro-assemble" title="アセンブル (Ctrl+Enter)">Assemble</button>
+        <label for="macro-entry">Entry PC:</label>
+        <input id="macro-entry" type="text" size="6" maxlength="4" placeholder="auto">
+        <button id="btn-macro-load" title="MM にロード + PC をエントリに設定">Load into MM</button>
+      </div>
+    </div>
+    <textarea id="macro-source" spellcheck="false" autocomplete="off"></textarea>
+  </section>
+
+  <section class="pane object-pane">
+    <div class="pane-head"><h2>オブジェクト (.b) / メッセージ</h2></div>
+    <pre id="macro-object-out"></pre>
+    <pre id="macro-log"></pre>
+  </section>
+</main>
+
+<!-- ============================================================ MICRO ASM -->
+<main id="micro-view" class="view">
+  <section class="pane editor-pane">
+    <div class="pane-head">
+      <h2>Micro source (.mas → CM)</h2>
+      <div class="controls">
+        <label for="micro-sample-select">サンプル:</label>
+        <select id="micro-sample-select"></select>
+        <button id="btn-micro-assemble" title="アセンブル (Ctrl+Enter)">Assemble</button>
+        <label for="micro-entry">Entry CMAR:</label>
+        <input id="micro-entry" type="text" size="5" maxlength="3" placeholder="auto">
+        <button id="btn-micro-load" title="CM にロード + CMAR をエントリに設定">Load into CM</button>
+      </div>
+    </div>
+    <textarea id="micro-source" spellcheck="false" autocomplete="off"></textarea>
+  </section>
+
+  <section class="pane object-pane">
+    <div class="pane-head"><h2>オブジェクト (.cm) / メッセージ</h2></div>
+    <pre id="micro-object-out"></pre>
+    <pre id="micro-log"></pre>
+  </section>
+</main>
+
+<footer>
+  <a href="https://github.com/Kenta11/MICRO-1-on-Web"
+     target="_blank" rel="noopener">
+    <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+      <path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+    </svg>
+    Kenta11/MICRO-1-on-Web
+  </a>
+</footer>
+
+<script src="js/assembler.js"></script>
+<script src="js/microsim.js"></script>
+<script src="js/microasm.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
