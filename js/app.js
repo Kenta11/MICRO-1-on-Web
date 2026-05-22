@@ -334,15 +334,26 @@ END
   // Run microsteps until CMAR returns to 0 (next FETCH) — i.e. one macro
   // instruction worth of work has retired.  Capped at 5000 to keep an
   // infinite loop from freezing the page.
+  // Read the user-supplied Max steps cap.  Empty / non-numeric => unlimited
+  // (matches the upstream m1sim.c behaviour where pressing Enter at the
+  // "MAX STEP=?" prompt disables the cap).
+  function getMaxSteps() {
+    const raw = $('max-steps').value.trim();
+    if (!raw) return Infinity;
+    const v = parseInt(raw, 10);
+    return (Number.isFinite(v) && v > 0) ? v : Infinity;
+  }
+
   function simMacrostep() {
     if (!sim.cpu || sim.cpu.halt) return;
     sim.cpu.setInput($('io-input').value);
     sim.cpu.io.output = $('io-output').textContent;
+    const max = getMaxSteps();
     let hit = null;
     let r = stepOnceCheckingBps();
     if (r.bp) hit = r;
     let n = 1;
-    while (!sim.cpu.halt && !hit && sim.cpu.CMAR !== 0 && n < 5000) {
+    while (!sim.cpu.halt && !hit && sim.cpu.CMAR !== 0 && n < max) {
       r = stepOnceCheckingBps();
       if (r.bp) hit = r;
       n++;
@@ -350,6 +361,8 @@ END
     refreshSimUI();
     if (hit) setBanner(`Breakpoint hit: ${hit.bp.toUpperCase()}[${
       hit.bp === 'cm' ? toHex(hit.addr, 3) : toHex(hit.addr, 4)}]`, 'ok');
+    else if (!sim.cpu.halt && n >= max && sim.cpu.CMAR !== 0)
+      setBanner(`Max steps reached (${max}) without a FETCH return`, 'error');
   }
   // Step the CPU once and tell the caller whether a CM or MM breakpoint
   // was hit (so Run / Macrostep know to stop after the bp's microstep).
@@ -372,18 +385,24 @@ END
     $('btn-macrostep').disabled = true;
     $('btn-stop').disabled = false;
     const burstSize = 2000;
+    const max = getMaxSteps();
+    const startSteps = sim.cpu.steps;
     const tick = () => {
       if (sim.cpu.halt) { simStop(); refreshSimUI(); return; }
       let hit = null;
+      let capped = false;
       for (let i = 0; i < burstSize; i++) {
+        if ((sim.cpu.steps - startSteps) >= max) { capped = true; break; }
         const r = stepOnceCheckingBps();
         if (r.halted) break;
         if (r.bp) { hit = r; break; }
       }
       refreshSimUI();
-      if (sim.cpu.halt || hit) {
+      if (sim.cpu.halt || hit || capped) {
         if (hit) setBanner(`Breakpoint hit: ${hit.bp.toUpperCase()}[${
           hit.bp === 'cm' ? toHex(hit.addr, 3) : toHex(hit.addr, 4)}]`, 'ok');
+        else if (capped)
+          setBanner(`Max steps reached (${max}). Increase the limit or clear it to keep running.`, 'error');
         simStop();
         return;
       }
