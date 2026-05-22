@@ -1,0 +1,358 @@
+:root {
+  --bg: #1e1f29;
+  --panel: #282a36;
+  --panel-2: #21222c;
+  --fg: #f8f8f2;
+  --muted: #6272a4;
+  --accent: #8be9fd;
+  --accent2: #50fa7b;
+  --warn: #ffb86c;
+  --err: #ff5555;
+  --hl: #44475a;
+  --mono: ui-monospace, SFMono-Regular, "Menlo", "Consolas", "Liberation Mono", monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--fg);
+  /* Force Japanese-shaped glyphs.  We prefer Noto Sans JP from Google
+     Fonts (loaded via <link> in index.html) so that systems whose
+     default CJK fallback is a Chinese font still render Japanese
+     correctly.  System Japanese fonts come next so offline users still
+     get something reasonable. */
+  font-family:
+    "Noto Sans JP",
+    "Hiragino Kaku Gothic ProN", "Hiragino Sans",
+    "Yu Gothic UI", "Yu Gothic", "YuGothic",
+    "Meiryo",
+    "Noto Sans CJK JP",
+    "BIZ UDPGothic",
+    system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+header {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--hl);
+}
+header h1 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--accent);
+}
+header .tagline {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.tag-macro { color: var(--accent2); padding: 0 4px; }
+.tag-micro { color: var(--warn); padding: 0 4px; }
+.tag-sim   { color: var(--accent); padding: 0 4px; }
+header code { font-family: var(--mono); color: var(--accent); }
+.banner {
+  background: var(--panel-2);
+  border: 1px solid var(--hl);
+  border-radius: 4px;
+  padding: 6px 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.banner.error { color: var(--err); border-color: var(--err); }
+.banner.ok    { color: var(--accent2); }
+
+.mode-tabs {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+}
+.tab-button {
+  background: var(--panel-2);
+  color: var(--muted);
+  border: 1px solid var(--hl);
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  padding: 6px 14px;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+.tab-button:hover { background: var(--hl); }
+.tab-button.active {
+  background: var(--panel);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.view { display: none; padding: 12px; gap: 12px; }
+.view.active { display: grid; }
+
+/* Simulator tab: control bar on top, CPU pane below. */
+#sim-view.active   { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+.sim-controls { grid-row: 1; }
+.sim-cpu      { grid-row: 2; }
+
+/* Assembler tabs: two columns side by side. */
+#macro-view.active,
+#micro-view.active { grid-template-columns: 1fr 1fr; }
+.editor-pane  { grid-column: 1; }
+.object-pane  { grid-column: 2; }
+
+.pane {
+  background: var(--panel);
+  border: 1px solid var(--hl);
+  border-radius: 6px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;        /* let flex children shrink below content width */
+}
+
+.pane-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.pane-head h2 {
+  margin: 0;
+  font-size: 14px;
+  color: var(--accent);
+}
+.controls {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+button, select, input[type=text] {
+  background: var(--panel-2);
+  color: var(--fg);
+  border: 1px solid var(--hl);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font: inherit;
+  cursor: pointer;
+}
+button:hover:not(:disabled) { background: var(--hl); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+input[type=text] { font-family: var(--mono); }
+
+textarea, pre {
+  background: var(--panel-2);
+  color: var(--fg);
+  border: 1px solid var(--hl);
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 13px;
+  margin: 0;
+  padding: 8px;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+}
+
+textarea#macro-source,
+textarea#micro-source {
+  width: 100%;
+  min-height: 380px;
+  resize: vertical;
+}
+#macro-object-out,
+#micro-object-out {
+  min-height: 380px;
+  max-height: 560px;
+  overflow: auto;
+  white-space: pre;
+}
+#macro-log,
+#micro-log {
+  margin-top: 6px;
+  max-height: 90px;
+  overflow: auto;
+  white-space: pre-wrap;
+  font-size: 12px;
+  color: var(--warn);
+}
+#macro-log:empty,
+#micro-log:empty { display: none; }
+
+.cpu-state {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 12px;
+}
+.cpu-state-micro {
+  grid-template-columns: 400px 1fr;
+}
+.cpu-state-micro .regs table { font-size: 12px; }
+.cpu-state-micro .regs td { font-family: var(--mono); }
+#mstatus-fields { font-family: var(--mono); white-space: pre-wrap; font-size: 11px; }
+#msys-cmdr { font-family: var(--mono); }
+#cm-view {
+  height: 240px;
+  overflow: auto;
+  white-space: pre;
+  font-size: 12px;
+}
+#cm-view .cmar-row { color: var(--accent2); font-weight: bold; }
+#bp-status { font-family: var(--mono); color: var(--err); }
+#micro-mem-view {
+  height: 200px;
+  overflow: auto;
+  white-space: pre;
+  font-size: 12px;
+}
+#micro-object-out { min-height: 180px; max-height: 280px; overflow: auto; white-space: pre; }
+#micro-log {
+  margin-top: 6px; max-height: 90px; overflow: auto;
+  white-space: pre-wrap; font-size: 12px; color: var(--warn);
+}
+#micro-log:empty { display: none; }
+#micro-io-input {
+  width: 100%;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+#micro-io-output {
+  min-height: 50px;
+  white-space: pre-wrap;
+  color: var(--accent2);
+}
+
+.regs h3, .memory h3 {
+  margin: 8px 0 4px;
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.regs h3:first-child { margin-top: 0; }
+
+#reg-table, #flag-table, #status-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--mono);
+}
+#reg-table th, #reg-table td,
+#flag-table th, #flag-table td,
+#status-table th, #status-table td {
+  border: 1px solid var(--hl);
+  padding: 3px 8px;
+  text-align: left;
+}
+#reg-table th, #flag-table th, #status-table th {
+  background: var(--panel-2);
+  color: var(--muted);
+  width: 1%;
+  white-space: nowrap;
+}
+.changed { color: var(--accent2); animation: flash 0.6s ease-out; }
+@keyframes flash {
+  0% { background: rgba(80, 250, 123, 0.4); }
+  100% { background: transparent; }
+}
+.editable { cursor: pointer; }
+.editable:hover { background: var(--hl); }
+.cell-edit-input {
+  background: var(--panel-2);
+  color: var(--accent2);
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  font-family: var(--mono);
+  font-size: inherit;
+  padding: 1px 4px;
+  width: 6ch;
+}
+
+.io-block { margin-top: 8px; }
+.io-block label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+#io-input {
+  width: 100%;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+#io-output {
+  min-height: 50px;
+  white-space: pre-wrap;
+  color: var(--accent2);
+}
+
+.memory { min-width: 0; }
+.mem-controls,
+.mem-edit {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+.mem-edit {
+  margin-top: 6px;
+  font-size: 12px;
+}
+.mem-edit input { font-family: var(--mono); }
+.mem-edit span { color: var(--muted); }
+#mem-view {
+  height: 360px;
+  overflow: auto;
+  white-space: pre;
+  font-size: 12px;
+}
+#mem-view .pc-row { color: var(--accent); font-weight: bold; }
+
+footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--hl);
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+footer a {
+  color: var(--muted);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+footer a:hover { color: var(--accent); }
+footer svg { display: inline-block; vertical-align: middle; }
+
+@media (max-width: 880px) {
+  #macro-view.active,
+  #micro-view.active { grid-template-columns: 1fr; }
+  .editor-pane, .object-pane { grid-column: 1; }
+  .cpu-state { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  /* On phones, shrink memory views and let bus/flag tables wrap rather
+     than horizontally scroll the whole row. */
+  #cm-view, #mm-view, #macro-object-out, #micro-object-out {
+    font-size: 11px;
+  }
+  #cm-view  { height: 280px; }
+  #mm-view  { height: 200px; }
+  header .tagline { display: none; }
+  .tab-button { padding: 6px 8px; font-size: 12px; }
+  #reg-table, #sys-table, #bus-table, #flag-table {
+    font-size: 11px;
+  }
+  #reg-table th, #reg-table td,
+  #sys-table th, #sys-table td,
+  #bus-table th, #bus-table td,
+  #flag-table th, #flag-table td { padding: 2px 4px; }
+}
